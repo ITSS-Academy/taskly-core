@@ -98,9 +98,7 @@ export class BoardService {
       const { data: deleteStorage, error: deleteStorageError } =
         await this.supabase.supabase.storage
           .from('background')
-          .remove([
-            `background/${background.fileName}-${background.createdAt.getTime()}`,
-          ]);
+          .remove([`background/${background.createdAt.getTime()}`]);
 
       if (deleteStorageError) {
         throw new BadRequestException(deleteStorageError.message);
@@ -145,21 +143,17 @@ export class BoardService {
       const { data: background, error: backgroundError } =
         await this.supabase.supabase.storage
           .from('background')
-          .upload(
-            `background/${file.originalname}-${date.getTime()}`,
-            file.buffer,
-            {
-              upsert: true,
-              contentType: file.mimetype,
-            },
-          );
+          .upload(`background/${date.getTime()}`, file.buffer, {
+            upsert: true,
+            contentType: file.mimetype,
+          });
       if (backgroundError) {
         throw new BadRequestException(backgroundError.message);
       }
       //get public url
-      const { data: publicURL } = await this.supabase.supabase.storage
+      const { data: publicURL } = this.supabase.supabase.storage
         .from('background')
-        .getPublicUrl(`background/${file.originalname}-${date.getTime()}`);
+        .getPublicUrl(`background/${date.getTime()}`);
 
       //create a row in the background table
       const { data: backgroundData, error: backgroundDataError } =
