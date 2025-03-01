@@ -12,10 +12,4 @@ export class SupabaseService {
   constructor() {
     console.log(this.supabase);
   }
-
-  async fetchCards() {
-    const data = await this.supabase.from('card').select();
-    console.log(data);
-    return data;
-  }
 }

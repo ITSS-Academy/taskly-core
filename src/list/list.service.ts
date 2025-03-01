@@ -168,23 +168,7 @@ export class ListService {
     if (error) {
       throw new BadRequestException(error.message);
     }
-    //get all lists
-    const { data: allLists, error: allListsError } =
-      await this.supbaseService.supabase
-        .from('list')
-        .select()
-        .eq('boardId', boardId)
-        .order('position');
-    if (allListsError) {
-      throw new BadRequestException(allListsError.message);
-    }
-    const result = allLists.map((list) => {
-      if (list.id === data[0].id) {
-        list.cards = [];
-      }
-      return list;
-    });
-    return allLists;
+    return data[0];
   }
 
   async updateLists(lists: UpdateListDto[], boardId: string) {

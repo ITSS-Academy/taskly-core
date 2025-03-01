@@ -33,8 +33,9 @@ export class BackgroundController {
     );
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.backgroundService.findOne(id);
-  // }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    console.log(id);
+    return this.backgroundService.findOne(id);
+  }
 }

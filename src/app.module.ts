@@ -54,7 +54,7 @@ dotenv.config();
     BackgroundModule,
   ],
   controllers: [AppController],
-  providers: [AppService, GatewayGateway, SupabaseService],
+  providers: [AppService, GatewayGateway],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

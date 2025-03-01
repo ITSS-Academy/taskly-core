@@ -42,8 +42,16 @@ export class BackgroundService {
     });
   }
 
-  findOne(id: string) {
-    return this.supabase.supabase.from('background').select().eq('id', id);
+  async findOne(id: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('background')
+      .select()
+      .eq('id', id);
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    console.log(data);
+    return data[0].fileLocation;
   }
 
   async changBackground(file: Express.Multer.File, backgroundId) {}

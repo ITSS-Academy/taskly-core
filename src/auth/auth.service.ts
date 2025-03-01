@@ -23,6 +23,7 @@ export class AuthService {
 
   async login(accessToken: any) {
     let decodedUser;
+    console.log(accessToken);
     try {
       const decodedToken = await admin
         .auth()

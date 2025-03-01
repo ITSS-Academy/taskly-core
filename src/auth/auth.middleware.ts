@@ -11,6 +11,7 @@ import { clearGlobalAppDefaultCred } from 'firebase-admin/lib/app/credential-fac
 export class AuthMiddleware implements NestMiddleware {
   async use(req: any, res: any, next: () => void) {
     const token = req.headers.authorization;
+
     if (!token) {
       throw new UnauthorizedException('Authorization token not found');
     }

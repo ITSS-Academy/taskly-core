@@ -64,7 +64,9 @@ export class BoardService {
     const { data, error } = await this.supabase.supabase
       .from('board')
       .select()
-      .eq('ownerId', uid);
+      .eq('ownerId', uid)
+      .order('createdAt', { ascending: false });
+
     if (error) {
       return error.message;
     }
@@ -187,7 +189,7 @@ export class BoardService {
         })
         .select();
 
-      return board;
+      return board[0];
     } else {
       const { data: board, error: boardError } = await this.supabase.supabase
         .from('board')
@@ -198,7 +200,7 @@ export class BoardService {
           backgroundId: createBoardDto.backgroundId,
         })
         .select();
-      return board;
+      return board[0];
     }
   }
 
