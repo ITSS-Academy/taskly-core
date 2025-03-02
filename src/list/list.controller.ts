@@ -24,9 +24,9 @@ export class ListController {
 
   //
   @Post('new-list')
-  createNewList(@Body() req: { boardId: string; list: CreateListDto }) {
-    console.log(req.list);
-    return this.listService.createNewLists(req.list, req.boardId);
+  createNewList(@Body() req: { boardId: string; listName: string }) {
+    console.log(req.listName);
+    return this.listService.createNewLists(req.listName, req.boardId);
   }
 
   @Get('cards/:boardId')
@@ -46,11 +46,7 @@ export class ListController {
     },
   ) {
     console.log(req);
-    return this.listService.updateListCard(
-        req.card,
-        req.position,
-        req.listId,
-    );
+    return this.listService.updateListCard(req.card, req.position, req.listId);
   }
 
   //

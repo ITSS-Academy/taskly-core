@@ -115,7 +115,7 @@ export class ListService {
     return lists;
   }
 
-  async createNewLists(createListDto: CreateListDto, boardId: string) {
+  async createNewLists(createListDto: string, boardId: string) {
     if (!createListDto) {
       throw new BadRequestException('No list provided');
     }
@@ -156,7 +156,7 @@ export class ListService {
     console.log(createListDto);
 
     const list = {
-      title: createListDto.title,
+      title: createListDto,
       boardId,
       position: lastPosition + 1,
     };
