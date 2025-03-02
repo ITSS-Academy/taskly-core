@@ -18,8 +18,8 @@ export class CardController {
 
   //
   @Post()
-  create(@Body() req: { card: CreateCardDto; listId: string }) {
-    return this.cardService.create(req.card, req.listId);
+  create(@Body() req: { title: string; listId: string }) {
+    return this.cardService.create(req.title, req.listId);
   }
 
   @Put('/:id')

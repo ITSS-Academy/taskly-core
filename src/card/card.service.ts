@@ -12,19 +12,17 @@ import { UpdateCardDto } from './dto/update-card.dto';
 export class CardService {
   constructor(private supabase: SupabaseService) {}
 
-  async create(createCardDto: CreateCardDto, listId: string) {
+  async create(title: string, listId: string) {
     let lastPosition!: number;
-    await this.supabase.supabase
+
+    const { data, error } = await this.supabase.supabase
       .from('card')
       .select('position')
       .eq('listId', listId)
       .order('position', { ascending: false })
-      .single()
-      .then((response) => {
-        if (response.data) {
-          lastPosition = response.data.position;
-        }
-      });
+      .limit(1);
+
+    lastPosition = data[0]?.position;
 
     if (lastPosition !== undefined) {
       lastPosition = lastPosition + 1;
@@ -33,8 +31,8 @@ export class CardService {
     }
 
     const newCard = {
-      title: createCardDto.title,
-      description: createCardDto.description,
+      title: title,
+      description: '',
       listId: listId,
       position: lastPosition,
     };

@@ -19,13 +19,13 @@ export class Card {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('text')
   title: string;
 
   @ManyToMany(() => User, (user) => user.cards)
   members: User[];
 
-  @Column()
+  @Column('text')
   description: string;
 
   @Column()
