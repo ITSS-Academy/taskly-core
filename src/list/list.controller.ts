@@ -40,16 +40,16 @@ export class ListController {
   updateListCard(
     @Body()
     req: {
-      previousList: UpdateListDto;
-      list: UpdateListDto;
-      boardId: string;
+      card: string;
+      listId: string;
+      position: number;
     },
   ) {
     console.log(req);
     return this.listService.updateListCard(
-      req.previousList,
-      req.list,
-      req.boardId,
+        req.card,
+        req.position,
+        req.listId,
     );
   }
 

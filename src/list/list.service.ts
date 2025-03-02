@@ -224,78 +224,111 @@ export class ListService {
     return data[0];
   }
 
-  async updateListCard(
-    previousList: UpdateListDto,
-    list: UpdateListDto,
-    boardId: string,
-  ) {
-    if (!previousList || !list) {
-      throw new BadRequestException('No lists provided');
+  async updateListCard(cardId: string, cardPosition: number, listId: string) {
+    console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+
+    const { data: card, error: cardError } = await this.supbaseService.supabase
+      .from('card')
+      .select()
+      .eq('id', cardId)
+      .single();
+    if (cardError) {
+      throw new BadRequestException(cardError.message);
     }
 
-    if (boardId) {
-      const { data, error } = await this.supbaseService.supabase
-        .from('board')
-        .select()
-        .eq('id', boardId);
-      if (error) {
-        throw new BadRequestException(error.message);
+    console.log(card);
+    console.log(card.listId);
+    console.log(listId);
+
+    if (card.listId != listId) {
+      // get all cards in th  e list
+      const { data: cards, error: cardsError } =
+        await this.supbaseService.supabase
+          .from('card')
+          .select('id, position')
+          .eq('listId', listId)
+          .order('position');
+
+      // create new card array with updated card position
+      let newCards = [...cards];
+
+      let newCard = {
+        id: cardId,
+        position: cardPosition,
+      };
+
+      newCards.splice(cardPosition, 0, newCard);
+
+      console.log(newCards);
+
+      console.log(listId);
+
+      // update all cards with new position
+      const promises = newCards.map((card, index) => {
+        return this.supbaseService.supabase
+          .from('card')
+          .update({ position: index, listId: listId })
+          .eq('id', card.id)
+          .select();
+      });
+
+      const results = await Promise.all(promises);
+
+      const dataArray = results.flatMap((result) => result.data);
+      console.log(dataArray);
+
+      if (
+        results.map((result) => result.error).filter((error) => error).length >
+        0
+      ) {
+        throw new BadRequestException('Error updating lists');
       }
-      if (data.length === 0) {
-        throw new NotFoundException('Board not found');
-      }
+      console.log(dataArray);
+      return dataArray;
     } else {
-      throw new BadRequestException('No boardId provided');
-    }
-
-    const { data: previousListData, error: previousListError } =
-      await this.supbaseService.supabase
-        .from('list')
-        .select()
-        .eq('id', previousList.id);
-    if (previousListError) {
-      throw new BadRequestException(previousListError.message);
-    }
-
-    const { data: ListData, error: ListError } =
-      await this.supbaseService.supabase
-        .from('list')
-        .select()
-        .eq('id', list.id);
-    if (ListError) {
-      throw new BadRequestException(ListError.message);
-    }
-
-    if (previousListData.length === 0 || ListData.length === 0) {
-      throw new NotFoundException('List not found');
-    }
-
-    console.log(previousList.cards, list.cards);
-
-    let promises = [];
-
-    console.log(list.cards);
-
-    for (let i = 0; i < previousList.cards.length; i++) {
-      promises.push(
-        this.supbaseService.supabase
+      // get all cards in the list
+      const { data: cards, error: cardsError } =
+        await this.supbaseService.supabase
           .from('card')
-          .update({ listId: previousList.id, position: i })
-          .eq('id', previousList.cards[i].id)
-          .select(),
-      );
-    }
-    for (let i = 0; i < list.cards.length; i++) {
-      promises.push(
-        this.supbaseService.supabase
+          .select('id, position')
+          .eq('listId', listId)
+          .order('position');
+
+      // create new card array with updated card position
+      let newCard = {
+        id: cardId,
+        position: cardPosition,
+      };
+
+      let newCards = [...cards];
+
+      //remove card from current position
+      newCards = newCards.filter((card) => card.id !== cardId);
+
+      console.log(newCards);
+
+      //insert card in new position
+      newCards.splice(cardPosition, 0, newCard);
+
+      console.log(newCards);
+      // update all cards with new position
+      const promises = newCards.map((card, index) => {
+        return this.supbaseService.supabase
           .from('card')
-          .update({ listId: list.id, position: i })
-          .eq('id', list.cards[i].id)
-          .select(),
-      );
+          .update({ position: index })
+          .eq('id', card.id)
+          .select();
+      });
+      const results = await Promise.all(promises);
+      const dataArray = results.flatMap((result) => result.data);
+      if (
+        results.map((result) => result.error).filter((error) => error).length >
+        0
+      ) {
+        throw new BadRequestException('Error updating lists');
+      }
+      console.log('2', dataArray);
+      return dataArray;
     }
-    let result = await Promise.all(promises);
-    console.log(result);
-    return result;
   }
 }
