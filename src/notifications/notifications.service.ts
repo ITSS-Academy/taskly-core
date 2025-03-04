@@ -147,15 +147,47 @@ export class NotificationsService {
   }
 
   async create(createNotificationDto: CreateNotificationDto, senderId: string) {
-    const newNotification = {
-      ...createNotificationDto,
-      read: false,
-      senderId,
-    };
+    //check users is invited or not for createNotificationDto.users
+    const { data: existUser, error: existError } = await this.supabase.supabase
+      .from('notification')
+      .select('userId')
+      .in(
+        'userId',
+        createNotificationDto.users.map((user) => user.id),
+      );
+    if (existError) {
+      throw new BadRequestException(existError.message);
+    }
+
+    //check if user is already invited, return uid of user
+    const invitedUser = existUser.map((user) => user.userId);
+    if (invitedUser.length > 0) {
+      //getName of user
+      const { data: users, error: usersError } = await this.supabase.supabase
+        .from('user')
+        .select('name')
+        .in('id', invitedUser);
+
+      const usersName = users.map((user) => user.name);
+
+      throw new BadRequestException(
+        `${usersName.join(', ')} is already invited`,
+      );
+    }
+
+    const newNotifications = createNotificationDto.users.map((user) => {
+      return {
+        type: NotificationType.INVITE_BOARD,
+        userId: user.id,
+        senderId,
+        read: false,
+        boardId: createNotificationDto.boardId,
+      };
+    });
 
     const { data, error } = await this.supabase.supabase
       .from('notification')
-      .insert(newNotification)
+      .insert(newNotifications)
       .select();
 
     if (error) {

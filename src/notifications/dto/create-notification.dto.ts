@@ -1,11 +1,13 @@
 import { NotificationType } from '../../enums/notification-type.enum';
 import { IsEnum } from 'class-validator';
+import { UserModel } from '../../gateway/models/user.model';
+import { CreateUserDto } from '../../user/dto/create-user.dto';
 
 export class CreateNotificationDto {
-  @IsEnum(NotificationType)
-  type: NotificationType;
+  type?: NotificationType;
 
-  boardId: string;
+  boardId?: string;
+  cardId?: string;
 
-  userId: string;
+  users: CreateUserDto[];
 }
