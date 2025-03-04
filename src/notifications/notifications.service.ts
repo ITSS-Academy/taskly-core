@@ -11,23 +11,35 @@ export class NotificationsService {
   constructor(private supabase: SupabaseService) {}
 
   async findAll(userId: string, limit: number, offset: number) {
-    const { data, error } = await this.supabase.supabase
-      .from('notification')
-      .update({ read: true })
-      .eq('userId', userId)
-      .eq('read', false)
-      .range(offset, offset + limit);
+    const { data: notifications, error: fetchError } =
+      await this.supabase.supabase
+        .from('notification')
+        .select()
+        .eq('userId', userId)
+        .order('createdAt', { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    if (error) {
-      throw new BadRequestException(error.message);
+    if (fetchError) {
+      throw new BadRequestException(fetchError.message);
     }
 
-    return this.supabase.supabase
+    if (!notifications || notifications.length === 0) {
+      return [];
+    }
+
+    this.updateReadStatus(notifications.map((noti) => noti.id));
+
+    console.log(notifications);
+    return notifications;
+  }
+
+  async updateReadStatus(ids: number[]) {
+    if (ids.length === 0) return;
+
+    await this.supabase.supabase
       .from('notification')
-      .select()
-      .eq('userId', userId)
-      .range(offset, offset + limit)
-      .order('created_at', { ascending: false });
+      .update({ read: true })
+      .in('id', ids);
   }
 
   async isNewNotification(userId: string) {

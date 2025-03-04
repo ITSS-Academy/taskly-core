@@ -56,7 +56,7 @@ export class Card {
   })
   cardAttachments: CardAttachment[];
 
-  @ManyToOne(() => Notification, (notification) => notification.card, {
+  @OneToMany(() => Notification, (notification) => notification.card, {
     onDelete: 'CASCADE',
     cascade: true,
   })

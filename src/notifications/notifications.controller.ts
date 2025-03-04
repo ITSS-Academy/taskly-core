@@ -39,13 +39,13 @@ export class NotificationsController {
     );
   }
 
-  @Get(':userId/:limit/:offset')
+  @Get(':limit/:offset')
   findAll(
-    @Param('userId') userId: string,
     @Param('limit') limit: number,
     @Param('offset') offset: number,
+    @Req() req: any,
   ) {
-    return this.notificationsService.findAll(userId, limit, offset);
+    return this.notificationsService.findAll(req.user.uid, limit, offset);
   }
 
   @Get('isNewNotification/:userId')
