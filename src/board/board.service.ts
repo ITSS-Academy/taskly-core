@@ -71,6 +71,25 @@ export class BoardService {
       return error.message;
     }
 
+    //get cout of lists in board by promise
+    const listsCountPromise = data.map(async (board: any) => {
+      const { data: lists, error: listError } = await this.supabase.supabase
+        .from('list')
+        .select('id', { count: 'exact' })
+        .eq('boardId', board.id);
+      if (listError) {
+        return 0;
+      }
+      return lists;
+    });
+
+    const listsCount = await Promise.all(listsCountPromise);
+
+    //add count of lists to board
+    data.forEach((board, index) => {
+      board.listsCount = listsCount[index][0];
+    });
+
     return data;
   }
 
@@ -276,6 +295,17 @@ export class BoardService {
     } else {
       data.labels = labels;
     }
+
+    //get lists count in board
+    const { data: lists, error: listError } = await this.supabase.supabase
+      .from('list')
+      .select('id', { count: 'exact' })
+      .eq('boardId', id);
+
+    if (listError) {
+      data.listsCount = 0;
+    }
+    data.listsCount = lists[0];
 
     return data;
   }

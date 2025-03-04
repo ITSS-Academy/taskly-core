@@ -7,78 +7,74 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
+import { BoardModel } from './models/board.model';
+import { ListModel } from './models/list.model';
 
-interface card {
-  id: string;
-  columnId: string;
-  title: string;
-  description: string;
-}
-
-interface column {
-  id: string;
-  title: string;
-  cards: card[];
-}
-
-interface Board {
-  lists: column[];
-  members: {
-    id: string;
-    mouse: { x: number; y: number };
-  }[];
-}
-
-@WebSocketGateway(80, { cors: true })
+@WebSocketGateway(80, {
+  cors: true,
+  transports: ['websocket'],
+})
 export class GatewayGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   boards: {
-    [key: string]: Board;
+    [boardId: string]: {
+      lists: ListModel[];
+      board: BoardModel;
+      members: {
+        id: string;
+      }[];
+    };
   } = {};
 
   @SubscribeMessage('message')
   handleMessage(@ConnectedSocket() client: Socket, payload: any) {
+    console.log('ádf');
     client.emit('message', 'Hello world!');
   }
 
   @SubscribeMessage('joinBoard')
   handleJoinBoard(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any,
+    @MessageBody()
+    payload: {
+      board: BoardModel;
+      lists: ListModel[];
+    },
   ) {
-    const { boardId, lists } = payload;
-    if (!this.boards[boardId]) {
-      this.boards[boardId] = { lists: [], members: [] };
+    console.log('Join board', payload);
+    const { board, lists } = payload;
+    if (!this.boards[board.id]) {
+      this.boards[board.id] = {
+        board: board,
+        lists: lists,
+        members: [
+          {
+            id: client.id,
+          },
+        ],
+      };
+    } else {
+      this.boards[board.id].members.push({
+        id: client.id,
+      });
     }
-    this.boards[boardId].lists = lists;
-    this.boards[boardId].members.push({ id: client.id, mouse: { x: 0, y: 0 } });
-    client.join(boardId);
-    console.log('Client joined board', client.id, this.boards[boardId]);
+
+    console.log('Client joined board', client.id, board.id);
   }
 
   @SubscribeMessage('listsChange')
   handleListsChange(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any,
+    @MessageBody()
+    payload: {
+      boardId: string;
+      lists: ListModel[];
+    },
   ) {
     const { boardId, lists } = payload;
     this.boards[boardId].lists = lists;
     client.to(boardId).emit('listsChange', lists);
-  }
-
-  @SubscribeMessage('mouseMove')
-  handleMouseMove(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any,
-  ) {
-    const { x, y } = payload;
-    const boardId = 'abc';
-    const member = this.boards[boardId].members.find(
-      (member) => member.id === client.id,
-    );
-    member.mouse = { x, y };
-    client.to(boardId).emit('mouseMove', { id: client.id, x, y });
   }
 
   handleConnection(client: Socket, ...args: any[]) {

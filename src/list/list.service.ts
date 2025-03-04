@@ -97,18 +97,12 @@ export class ListService {
       list.cards = data;
       for (let card of list.cards) {
         //select assigned users and board labels
-        Promise.all([
-          this.supbaseService.supabase
-            .from('user_cards')
-            .select('user_id')
-            .eq('card_id', card.id),
-          this.supbaseService.supabase
-            .from('labels_cards')
-            .select('boardLabelId')
-            .eq('cardId', card.id),
+        await Promise.all([
+          this.getAssignedUsers(card.id),
+          this.getLaBelCards(card.id),
         ]).then((results) => {
-          card.assignedUsers = results[0].data;
-          card.labels = results[1].data;
+          card.assignedUsers = results[0];
+          card.labels = results[1];
         });
       }
     }
@@ -275,7 +269,18 @@ export class ListService {
       const results = await Promise.all(promises);
 
       const dataArray = results.flatMap((result) => result.data);
-      console.log(dataArray);
+
+      for (let card of dataArray) {
+        console.log(card);
+        await Promise.all([
+          this.getAssignedUsers(card.id),
+          this.getLaBelCards(card.id),
+        ]).then((results) => {
+          card.assignedUsers = results[0];
+          card.labels = results[1];
+          console.log(card);
+        });
+      }
 
       if (
         results.map((result) => result.error).filter((error) => error).length >
@@ -283,7 +288,7 @@ export class ListService {
       ) {
         throw new BadRequestException('Error updating lists');
       }
-      console.log(dataArray);
+      console.log('cuoi', dataArray);
       return dataArray;
     } else {
       // get all cards in the list
@@ -327,8 +332,40 @@ export class ListService {
       ) {
         throw new BadRequestException('Error updating lists');
       }
-      console.log('2', dataArray);
+      await Promise.all(
+        dataArray.map(async (card) => {
+          await Promise.all([
+            this.getAssignedUsers(card.id),
+            this.getLaBelCards(card.id),
+          ]).then((results) => {
+            card.assignedUsers = results[0];
+            card.labels = results[1];
+          });
+        }),
+      );
       return dataArray;
     }
+  }
+
+  async getLaBelCards(cardId: string) {
+    const { data, error } = await this.supbaseService.supabase
+      .from('labels_cards')
+      .select('boardLabelId')
+      .eq('cardId', cardId);
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    return data;
+  }
+
+  async getAssignedUsers(cardId: string) {
+    const { data, error } = await this.supbaseService.supabase
+      .from('user_cards')
+      .select('user_id')
+      .eq('card_id', cardId);
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    return data;
   }
 }
