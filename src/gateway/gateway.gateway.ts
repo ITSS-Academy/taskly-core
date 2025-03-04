@@ -5,8 +5,9 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { BoardModel } from './models/board.model';
 import { ListModel } from './models/list.model';
 
@@ -17,6 +18,9 @@ import { ListModel } from './models/list.model';
 export class GatewayGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  @WebSocketServer()
+  server: Server;
+
   boards: {
     [boardId: string]: {
       lists: ListModel[];
@@ -60,7 +64,25 @@ export class GatewayGateway
       });
     }
 
+    client.join(board.id);
+
     console.log('Client joined board', client.id, board.id);
+  }
+
+  @SubscribeMessage('leaveBoard')
+  handleLeaveBoard(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: {
+      boardId: string;
+    },
+  ) {
+    const { boardId } = payload;
+    client.leave(boardId);
+    this.boards[boardId].members = this.boards[boardId].members.filter(
+      (member) => member.id !== client.id,
+    );
+    console.log('Client left board', client.id, boardId);
   }
 
   @SubscribeMessage('listsChange')
@@ -73,8 +95,9 @@ export class GatewayGateway
     },
   ) {
     const { boardId, lists } = payload;
+    console.log('Lists change', boardId, lists);
     this.boards[boardId].lists = lists;
-    client.to(boardId).emit('listsChange', lists);
+    this.server.to(boardId).emit('listsChange', lists);
   }
 
   handleConnection(client: Socket, ...args: any[]) {
@@ -82,12 +105,6 @@ export class GatewayGateway
   }
 
   handleDisconnect(client: Socket): any {
-    client.leave('abc');
-    if (this.boards['abc']) {
-      this.boards['abc'].members = this.boards['abc'].members.filter(
-        (member) => member.id !== client.id,
-      );
-    }
     console.log('Client disconnected', client.id);
   }
 }
