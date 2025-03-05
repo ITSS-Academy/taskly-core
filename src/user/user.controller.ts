@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -19,6 +20,11 @@ export class UserController {
   @Get('search')
   search(@Query('email') email: string) {
     return this.userService.search(email);
+  }
+
+  @Get('')
+  getUser(@Req() req: any) {
+    return this.userService.getUserById(req.user.uid);
   }
 
   @Get('/:userId')

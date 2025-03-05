@@ -54,11 +54,10 @@ export class NotificationsController {
     return this.notificationsService.isNewNotification(userId);
   }
 
-  @Delete('/isAccept/board')
+  @Put('/isAccept/board')
   isAcceptNotification(
     @Body()
     req: {
-      userId: string;
       notificationId: string;
       isAccepted: boolean;
     },

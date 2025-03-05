@@ -21,6 +21,7 @@ import { BoardLabelModule } from './board_label/board_label.module';
 import { CardAttachmentModule } from './card_attachment/card_attachment.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { BackgroundModule } from './background/background.module';
+import { NotiGateway } from './gateway/noti/noti.gateway';
 
 dotenv.config();
 
@@ -54,7 +55,7 @@ dotenv.config();
     BackgroundModule,
   ],
   controllers: [AppController],
-  providers: [AppService, GatewayGateway],
+  providers: [AppService, GatewayGateway, NotiGateway],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
