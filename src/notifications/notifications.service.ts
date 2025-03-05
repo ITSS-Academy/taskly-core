@@ -57,7 +57,6 @@ export class NotificationsService {
   }
 
   async isAcceptNotification(notificationId: string, isAccepted: boolean) {
-    // Lấy dữ liệu của thông báo trước khi xóa
     const { data: noti, error } = await this.supabase.supabase
       .from('notification')
       .select('boardId, userId, senderId')
@@ -82,21 +81,21 @@ export class NotificationsService {
     }
 
     // check if user is already a member of this board
-    const { data: boardMember, error: boardMemberError } =
-      await this.supabase.supabase
-        .from('board_members')
-        .select()
-        .eq('user_id', receiver)
-        .eq('board_id', boardId)
-        .single();
-
-    if (boardMemberError) {
-      throw new BadRequestException(boardMemberError.message);
-    }
-
-    if (boardMember) {
-      throw new BadRequestException('User is already a member of this board');
-    }
+    // const { data: boardMember, error: boardMemberError } =
+    //   await this.supabase.supabase
+    //     .from('board_members')
+    //     .select()
+    //     .eq('user_id', receiver)
+    //     .eq('board_id', boardId)
+    //     .single();
+    //
+    // if (boardMemberError) {
+    //   throw new BadRequestException(boardMemberError.message);
+    // }
+    //
+    // if (boardMember) {
+    //   throw new BadRequestException('User is already a member of this board');
+    // }
 
     if (isAccepted && boardId) {
       const { data, error } = await this.supabase.supabase

@@ -18,4 +18,16 @@ export class UserService {
     }
     return data;
   }
+
+  async getUserById(userId: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('user')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    return data;
+  }
 }

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Req,
+  Put,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -53,7 +54,7 @@ export class NotificationsController {
     return this.notificationsService.isNewNotification(userId);
   }
 
-  @Delete('/board')
+  @Delete('/isAccept/board')
   isAcceptNotification(
     @Body()
     req: {

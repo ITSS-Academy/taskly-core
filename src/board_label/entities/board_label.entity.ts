@@ -25,7 +25,9 @@ export class BoardLabel {
   @Column('text')
   color: string;
 
-  @ManyToMany(() => Card, (card) => card.labels)
+  @ManyToMany(() => Card, (card) => card.labels, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable({
     name: 'labels_cards',
   })

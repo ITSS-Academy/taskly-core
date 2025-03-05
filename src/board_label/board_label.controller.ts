@@ -27,6 +27,11 @@ export class BoardLabelController {
   }
 
   @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.boardLabelService.findOne(id);
+  }
+
+  @Get('get-all-in-board/:id')
   findAll(@Param('id') id: string) {
     return this.boardLabelService.findAll(id);
   }

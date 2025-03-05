@@ -50,8 +50,17 @@ export class BoardLabelService {
     return data;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} boardLabel`;
+  async findOne(id: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('board_label')
+      .select()
+      .eq('id', id)
+      .single();
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    return data;
   }
 
   async update(updateBoardLabelDto: UpdateBoardLabelDto) {

@@ -101,7 +101,7 @@ export class ListService {
           this.getAssignedUsers(card.id),
           this.getLaBelCards(card.id),
         ]).then((results) => {
-          card.assignedUsers = results[0];
+          card.members = results[0];
           card.labels = results[1];
         });
       }
@@ -276,7 +276,7 @@ export class ListService {
           this.getAssignedUsers(card.id),
           this.getLaBelCards(card.id),
         ]).then((results) => {
-          card.assignedUsers = results[0];
+          card.members = results[0];
           card.labels = results[1];
           console.log(card);
         });
@@ -338,7 +338,7 @@ export class ListService {
             this.getAssignedUsers(card.id),
             this.getLaBelCards(card.id),
           ]).then((results) => {
-            card.assignedUsers = results[0];
+            card.members = results[0];
             card.labels = results[1];
           });
         }),

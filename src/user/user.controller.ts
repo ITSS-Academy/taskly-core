@@ -20,4 +20,9 @@ export class UserController {
   search(@Query('email') email: string) {
     return this.userService.search(email);
   }
+
+  @Get('/:userId')
+  getUserById(@Param('userId') userId: string) {
+    return this.userService.getUserById(userId);
+  }
 }

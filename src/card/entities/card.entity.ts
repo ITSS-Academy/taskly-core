@@ -48,7 +48,10 @@ export class Card {
   })
   checklistItems: ChecklistItem[];
 
-  @ManyToMany(() => BoardLabel, (boardLabel) => boardLabel.cards)
+  @ManyToMany(() => BoardLabel, (boardLabel) => boardLabel.cards, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
   labels: BoardLabel[];
 
   @OneToMany(() => CardAttachment, (cardAttachment) => cardAttachment.card, {
