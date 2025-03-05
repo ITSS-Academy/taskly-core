@@ -46,7 +46,7 @@ export class GatewayGateway
       lists: ListModel[];
     },
   ) {
-    console.log('Join board', payload);
+    // console.log('Join board', payload);
     const { board, lists } = payload;
     if (!this.boards[board.id]) {
       this.boards[board.id] = {

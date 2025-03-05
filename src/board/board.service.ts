@@ -220,13 +220,32 @@ export class BoardService {
   async findInvitedBoards(uid: string) {
     const { data, error } = await this.supabase.supabase
       .from('board_members')
-      .select('boardId')
-      .eq('userId', uid);
+      .select('board_id')
+      .eq('user_id', uid);
     if (error) {
       throw new BadRequestException(error.message);
     }
 
-    return data;
+    const promises = data.map(async (board: any) => {
+      const { data: boardData, error } = await this.supabase.supabase
+        .from('board')
+        .select()
+        .eq('id', board.board_id)
+        .single();
+
+      if (error) throw new BadRequestException(error.message);
+      return boardData;
+    });
+
+    const boards = await Promise.all(promises);
+
+    const errorBoards = boards.filter((board) => board?.error);
+    if (errorBoards.length > 0) {
+      throw new BadRequestException(errorBoards[0].error.message);
+    }
+
+    console.log(boards);
+    return boards;
   }
 
   updateBackground(id: string, backgroundId: string) {

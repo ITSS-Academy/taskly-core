@@ -11,12 +11,14 @@ export class NotificationsService {
   constructor(private supabase: SupabaseService) {}
 
   async findAll(userId: string, limit: number, offset: number) {
+    console.log(userId, limit, offset);
     const { data: notifications, error: fetchError } =
       await this.supabase.supabase
         .from('notification')
         .select()
         .eq('userId', userId)
         .order('createdAt', { ascending: false })
+        .order('read', { ascending: true })
         .range(offset, offset + limit - 1);
 
     if (fetchError) {
@@ -27,7 +29,7 @@ export class NotificationsService {
       return [];
     }
 
-    this.updateReadStatus(notifications.map((noti) => noti.id));
+    await this.updateReadStatus(notifications.map((noti) => noti.id));
 
     console.log(notifications);
     return notifications;
@@ -49,11 +51,12 @@ export class NotificationsService {
       .eq('userId', userId)
       .eq('read', false)
       .single();
+    console.log(data);
 
     if (error) {
       return false;
     }
-    return data.length > 0;
+    return data ? true : false;
   }
 
   async isAcceptNotification(notificationId: string, isAccepted: boolean) {

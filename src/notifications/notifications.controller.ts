@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   Put,
+  Logger,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -49,9 +50,9 @@ export class NotificationsController {
     return this.notificationsService.findAll(req.user.uid, limit, offset);
   }
 
-  @Get('isNewNotification/:userId')
-  isNewNotification(@Param('userId') userId: string) {
-    return this.notificationsService.isNewNotification(userId);
+  @Get('isNewNotification')
+  isNewNotification(@Req() req: any) {
+    return this.notificationsService.isNewNotification(req.user.uid);
   }
 
   @Put('/isAccept/board')
