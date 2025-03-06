@@ -136,4 +136,40 @@ export class CardService {
     }
     return data;
   }
+
+  async findAllByUid(uid, offset: number, limit: number) {
+    const newPage = offset + limit - 1;
+    const { data: cards, error: fetchError } = await this.supabase.supabase
+      .from('user_cards')
+      .select('cardId')
+      .eq('userId', uid)
+      .order('createdAt', { ascending: false })
+      .range(offset, newPage);
+
+    if (fetchError) {
+      throw new BadRequestException(fetchError.message);
+    }
+
+    if (!cards || cards.length === 0) {
+      return [];
+    }
+
+    const promises = cards.map(async (card) => {
+      const { data: cardData, error } = await this.supabase.supabase
+        .from('card')
+        .select()
+        .eq('id', card.cardId)
+        .single();
+
+      if (error) {
+        throw new BadRequestException(error.message);
+      }
+      return cardData;
+    });
+
+    const cardData = await Promise.all(promises);
+    console.log(cardData);
+
+    return cardData;
+  }
 }

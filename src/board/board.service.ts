@@ -287,7 +287,7 @@ export class BoardService {
       data.members = members;
     }
 
-    console.log(data.backgroundId);
+    // console.log(data.backgroundId);
 
     //get Background
     const { data: background, error: backgroundError } =

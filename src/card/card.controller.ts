@@ -7,6 +7,7 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { CardService } from './card.service';
 import { CreateCardDto } from './dto/create-card.dto';
@@ -50,5 +51,14 @@ export class CardController {
   @Delete('/remove-member')
   removeMember(@Body() req: { cardId: string; userId: string }) {
     return this.cardService.removeMember(req.cardId, req.userId);
+  }
+
+  @Get('get-all-by-uid/:offset/:limit')
+  findAllByUid(
+    @Param('offset') offset: number,
+    @Param('limit') limit: number,
+    @Req() req: any,
+  ) {
+    return this.cardService.findAllByUid(req.user.uid, offset, limit);
   }
 }
