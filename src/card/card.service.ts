@@ -172,4 +172,81 @@ export class CardService {
 
     return cardData;
   }
+
+  async findOne(id: string) {
+    const { data: cardData, error: cardError } = await this.supabase.supabase
+      .from('card')
+      .select('id,title,description,dueDate')
+      .eq('id', id)
+      .single();
+
+    if (cardError) {
+      throw new BadRequestException(cardError.message);
+    }
+
+    //get comments
+    const { data: comments, error: commentError } = await this.supabase.supabase
+      .from('comment')
+      .select()
+      .eq('cardId', id);
+
+    if (commentError) {
+      throw new BadRequestException(commentError.message);
+    }
+
+    //get checklist items
+    const { data: checklistItems, error: checklistItemError } =
+      await this.supabase.supabase
+        .from('checklist_item')
+        .select()
+        .eq('cardId', id);
+
+    if (checklistItemError) {
+      throw new BadRequestException(checklistItemError.message);
+    }
+
+    //get labels
+    const { data: labels, error: labelError } = await this.supabase.supabase
+      .from('labels_cards')
+      .select('boardLabelId')
+      .eq('cardId', id);
+
+    if (labelError) {
+      throw new BadRequestException(labelError.message);
+    }
+
+    //get members
+    const { data: members, error: memberError } = await this.supabase.supabase
+      .from('user_cards')
+      .select('user_id')
+      .eq('card_id', id);
+
+    if (memberError) {
+      throw new BadRequestException(memberError.message);
+    }
+
+    //get attachments
+
+    const { data: attachments, error: attachmentError } =
+      await this.supabase.supabase
+        .from('card_attachment')
+        .select()
+        .eq('cardId', id);
+
+    if (attachmentError) {
+      throw new BadRequestException(attachmentError.message);
+    }
+
+    return {
+      id: cardData.id,
+      title: cardData.title,
+      description: cardData.description,
+      dueDate: cardData.dueDate,
+      comments,
+      checklistItems,
+      labels,
+      members,
+      attachments,
+    };
+  }
 }

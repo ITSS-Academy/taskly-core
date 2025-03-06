@@ -1,5 +1,5 @@
 export class CreateChecklistItemDto {
-  name: string;
+  title: string;
   position: number;
   is_completed: boolean;
   cardId: string;

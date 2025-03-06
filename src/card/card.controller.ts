@@ -61,4 +61,9 @@ export class CardController {
   ) {
     return this.cardService.findAllByUid(req.user.uid, offset, limit);
   }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.cardService.findOne(id);
+  }
 }

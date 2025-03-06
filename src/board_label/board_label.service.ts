@@ -118,11 +118,14 @@ export class BoardLabelService {
     });
 
     let labels = await Promise.all(insertPromises);
-
     console.log(labels);
 
-    labels = labels.map((label) => label.data);
+    const labelIds = labels.map((label) => {
+      return { boardLabelId: label.data.boardLabelId };
+    });
 
-    return labels;
+    console.log(labelIds);
+
+    return { cardId, labelIds };
   }
 }

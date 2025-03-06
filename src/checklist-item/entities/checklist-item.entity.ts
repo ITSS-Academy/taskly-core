@@ -3,11 +3,11 @@ import { Card } from '../../card/entities/card.entity';
 
 @Entity()
 export class ChecklistItem {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: number;
 
   @Column('text')
-  name: string;
+  title: string;
 
   @ManyToOne(() => Card, (card) => card.checklistItems, { onDelete: 'CASCADE' })
   card: Card;

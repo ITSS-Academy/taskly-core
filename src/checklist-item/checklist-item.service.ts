@@ -25,7 +25,7 @@ export class ChecklistItemService {
     }
 
     const checklistItem = this.checklistItemRepository.create({
-      name: createChecklistItemDto.name,
+      title: createChecklistItemDto.title,
       position: createChecklistItemDto.position,
       is_completed: createChecklistItemDto.is_completed,
       card: card,

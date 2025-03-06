@@ -13,6 +13,8 @@ export class NotificationsService {
   async findAll(userId: string, limit: number, offset: number) {
     const newPage = Number(offset) + Number(limit - 1);
     console.log(userId, newPage);
+
+    // 🔹 Lấy danh sách thông báo từ Supabase
     const { data: notifications, error: fetchError } =
       await this.supabase.supabase
         .from('notification')
@@ -30,11 +32,56 @@ export class NotificationsService {
       return [];
     }
 
-    await this.updateReadStatus(notifications.map((noti) => noti.id));
+    // ✅ Tạo danh sách promise để lấy thông tin bổ sung
+    const dataPromises = notifications.map(async (noti) => {
+      let senderName = null;
+      let boardName = null;
+      let cardTitle = null;
 
-    console.log(userId);
-    console.log(notifications.length);
-    return notifications;
+      if (noti.senderId) {
+        const senderRes = await this.supabase.supabase
+          .from('user')
+          .select('name')
+          .eq('id', noti.senderId)
+          .single();
+        senderName = senderRes.data?.name || null;
+      }
+
+      if (noti.boardId) {
+        const boardRes = await this.supabase.supabase
+          .from('board')
+          .select('name')
+          .eq('id', noti.boardId)
+          .single();
+        boardName = boardRes.data?.name || null;
+      }
+
+      if (noti.cardId) {
+        const cardRes = await this.supabase.supabase
+          .from('card')
+          .select('title')
+          .eq('id', noti.cardId)
+          .single();
+        cardTitle = cardRes.data?.title || null;
+      }
+
+      return {
+        ...noti,
+        senderName,
+        boardName,
+        cardTitle,
+      };
+    });
+
+    // ✅ Chạy update trạng thái read song song với lấy dữ liệu bổ sung
+    const [enrichedNotifications] = await Promise.all([
+      Promise.all(dataPromises),
+      this.updateReadStatus(notifications.map((noti) => noti.id)),
+    ]);
+
+    console.log(enrichedNotifications);
+
+    return enrichedNotifications;
   }
 
   async updateReadStatus(ids: number[]) {
@@ -53,7 +100,6 @@ export class NotificationsService {
       .eq('userId', userId)
       .eq('read', false)
       .single();
-    console.log(data);
 
     if (error) {
       return false;
@@ -133,7 +179,18 @@ export class NotificationsService {
         throw new BadRequestException(senderNotiError.message);
       }
 
-      return data;
+      //get board
+      const { data: board, error: boardError } = await this.supabase.supabase
+        .from('board')
+        .select()
+        .eq('id', boardId)
+        .single();
+
+      if (boardError) {
+        throw new BadRequestException(boardError.message);
+      }
+
+      return board;
     }
 
     if (!isAccepted && boardId) {
