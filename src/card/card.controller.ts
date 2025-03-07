@@ -23,9 +23,10 @@ export class CardController {
     return this.cardService.create(req.title, req.listId);
   }
 
-  @Put('/:id')
-  updateCard(@Param('id') id: string, @Body() req: UpdateCardDto) {
-    return this.cardService.updateCard(id, req);
+  @Put()
+  updateCard(@Body() req: any) {
+    console.log(req);
+    return this.cardService.updateCard(req);
   }
 
   @Post('/add-new-member')

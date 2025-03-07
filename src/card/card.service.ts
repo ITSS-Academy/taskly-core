@@ -45,21 +45,40 @@ export class CardService {
     return this.supabase.supabase.from('card').delete().eq('id', id);
   }
 
-  async updateCard(id: string, card: UpdateCardDto) {
+  async updateCard(card: UpdateCardDto) {
     if (!card) {
       throw new BadRequestException('Title is required');
     }
-    const { data, error } = await this.supabase.supabase
-      .from('card')
-      .update(card)
-      .eq('id', id)
-      .select();
 
-    if (error) {
-      throw new BadRequestException(error.message);
+    //update and get listId promise.all
+    const promises = [
+      this.supabase.supabase
+        .from('card')
+        .update({
+          title: card.title,
+          description: card.description,
+          dueDate: card.dueDate,
+        })
+        .eq('id', card.id)
+        .select(),
+      this.supabase.supabase
+        .from('card')
+        .select('listId')
+        .eq('id', card.id)
+        .single(),
+    ];
+
+    let [data, listData] = await Promise.all(promises);
+
+    if (data.error) {
+      throw new BadRequestException(data.error.message);
     }
 
-    return data;
+    if (listData.error) {
+      throw new BadRequestException(listData.error.message);
+    }
+
+    return data.data[0];
   }
 
   async updateDescription(id: string, description: string) {
