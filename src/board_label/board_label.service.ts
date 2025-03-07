@@ -118,14 +118,20 @@ export class BoardLabelService {
     });
 
     let labels = await Promise.all(insertPromises);
-    console.log(labels);
 
-    const labelIds = labels.map((label) => {
-      return { boardLabelId: label.data.boardLabelId };
+    const labelPromises = labels.map(async (label) => {
+      const { data, error } = await this.supabase.supabase
+        .from('board_label')
+        .select()
+        .eq('id', label.data.boardLabelId)
+        .single();
+
+      if (error) throw new BadRequestException(error.message);
+      return data;
     });
 
-    console.log(labelIds);
+    const labelData = await Promise.all(labelPromises);
 
-    return { cardId, labelIds };
+    return { cardId, labelData };
   }
 }
