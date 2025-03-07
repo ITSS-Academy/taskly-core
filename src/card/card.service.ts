@@ -184,58 +184,57 @@ export class CardService {
       throw new BadRequestException(cardError.message);
     }
 
-    //get comments
-    const { data: comments, error: commentError } = await this.supabase.supabase
-      .from('comment')
-      .select()
-      .eq('cardId', id);
+    const [
+      { data: comments, error: commentError },
+      { data: checklistItems, error: checklistItemError },
+      { data: labels, error: labelError },
+      { data: members, error: memberError },
+      { data: attachments, error: attachmentError },
+    ] = await Promise.all([
+      this.supabase.supabase.from('comment').select().eq('cardId', id),
+      this.supabase.supabase.from('checklist_item').select().eq('cardId', id),
+      this.supabase.supabase
+        .from('labels_cards')
+        .select('boardLabelId')
+        .eq('cardId', id),
+      this.supabase.supabase
+        .from('user_cards')
+        .select('user_id')
+        .eq('card_id', id),
+      this.supabase.supabase.from('card_attachment').select().eq('cardId', id),
+    ]);
 
-    if (commentError) {
-      throw new BadRequestException(commentError.message);
-    }
-
-    //get checklist items
-    const { data: checklistItems, error: checklistItemError } =
-      await this.supabase.supabase
-        .from('checklist_item')
-        .select()
-        .eq('cardId', id);
-
-    if (checklistItemError) {
+    if (commentError) throw new BadRequestException(commentError.message);
+    if (checklistItemError)
       throw new BadRequestException(checklistItemError.message);
-    }
+    if (labelError) throw new BadRequestException(labelError.message);
+    if (memberError) throw new BadRequestException(memberError.message);
+    if (attachmentError) throw new BadRequestException(attachmentError.message);
 
-    //get labels
-    const { data: labels, error: labelError } = await this.supabase.supabase
-      .from('labels_cards')
-      .select('boardLabelId')
-      .eq('cardId', id);
-
-    if (labelError) {
-      throw new BadRequestException(labelError.message);
-    }
-
-    //get members
-    const { data: members, error: memberError } = await this.supabase.supabase
-      .from('user_cards')
-      .select('user_id')
-      .eq('card_id', id);
-
-    if (memberError) {
-      throw new BadRequestException(memberError.message);
-    }
-
-    //get attachments
-
-    const { data: attachments, error: attachmentError } =
-      await this.supabase.supabase
-        .from('card_attachment')
+    //get label and member
+    const labelPromises = labels.map((label) => {
+      return this.supabase.supabase
+        .from('board_label')
         .select()
-        .eq('cardId', id);
+        .eq('id', label.boardLabelId)
+        .single();
+    });
 
-    if (attachmentError) {
-      throw new BadRequestException(attachmentError.message);
-    }
+    const memberPromises = members.map((member) => {
+      return this.supabase.supabase
+        .from('user')
+        .select()
+        .eq('id', member.user_id)
+        .single();
+    });
+
+    let [labelData, memberData] = await Promise.all([
+      Promise.all(labelPromises),
+      Promise.all(memberPromises),
+    ]);
+
+    labelData = labelData.map((label) => label.data);
+    memberData = memberData.map((member) => member.data);
 
     return {
       id: cardData.id,
@@ -244,8 +243,8 @@ export class CardService {
       dueDate: cardData.dueDate,
       comments,
       checklistItems,
-      labels,
-      members,
+      labels: labelData,
+      members: memberData,
       attachments,
     };
   }
