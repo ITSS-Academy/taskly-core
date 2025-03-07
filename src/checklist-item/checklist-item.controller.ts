@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { ChecklistItemService } from './checklist-item.service';
 import { CreateChecklistItemDto } from './dto/create-checklist-item.dto';
@@ -18,5 +19,18 @@ export class ChecklistItemController {
   @Post()
   create(@Body() createChecklistItemDto: CreateChecklistItemDto) {
     return this.checklistItemService.create(createChecklistItemDto);
+  }
+
+  @Put('toogle')
+  toogleChecklistItem(@Body() req: { id: string; isCompleted: boolean }) {
+    return this.checklistItemService.toogleChecklistItem(
+      req.id,
+      req.isCompleted,
+    );
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.checklistItemService.remove(id);
   }
 }

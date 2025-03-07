@@ -211,7 +211,11 @@ export class CardService {
       { data: attachments, error: attachmentError },
     ] = await Promise.all([
       this.supabase.supabase.from('comment').select().eq('cardId', id),
-      this.supabase.supabase.from('checklist_item').select().eq('cardId', id),
+      this.supabase.supabase
+        .from('checklist_item')
+        .select()
+        .eq('cardId', id)
+        .order('is_completed', { ascending: true }),
       this.supabase.supabase
         .from('labels_cards')
         .select('boardLabelId')
@@ -254,6 +258,9 @@ export class CardService {
 
     labelData = labelData.map((label) => label.data);
     memberData = memberData.map((member) => member.data);
+    checklistItems.map((item) => {
+      item.isCompleted = item.is_completed;
+    });
 
     return {
       id: cardData.id,

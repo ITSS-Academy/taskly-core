@@ -78,7 +78,7 @@ export class BoardService {
         .select('id', { count: 'exact' })
         .eq('boardId', board.id);
       if (listError) {
-        return 0;
+        throw new BadRequestException(listError.message);
       }
       return lists;
     });
