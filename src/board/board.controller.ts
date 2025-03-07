@@ -11,6 +11,7 @@ import {
   UploadedFile,
   Query,
   UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { CreateBoardDto } from './dto/create-board.dto';
@@ -46,8 +47,27 @@ export class BoardController {
   }
 
   @Put('background/:id')
-  updateBackground(@Param('id') id: string, @Body() backgroundId: string) {
-    return this.boardService.updateBackground(id, backgroundId);
+  @UseInterceptors(FileInterceptor('background'))
+  updateBackground(
+    @Param('id') id: string,
+    @Body()
+    req: {
+      boardId: string;
+      backgroundId?: string;
+    },
+    @UploadedFile() background?: Express.Multer.File,
+  ) {
+    let newBackground: string | Express.Multer.File;
+
+    if (req.backgroundId) {
+      newBackground = req.backgroundId;
+    } else if (background) {
+      newBackground = background;
+    } else {
+      throw new BadRequestException('Background is required');
+    }
+
+    return this.boardService.updateBackground(req.boardId, newBackground);
   }
 
   @Get('get-all-by-uid')

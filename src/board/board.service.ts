@@ -248,11 +248,11 @@ export class BoardService {
     return boards;
   }
 
-  updateBackground(id: string, backgroundId: string) {
+  updateBackground(id: string, background: string | Express.Multer.File) {
     return this.supabase.supabase
       .from('board')
       .update({
-        backgroundId: backgroundId,
+        backgroundId: background,
       })
       .eq('id', id);
   }
