@@ -84,7 +84,7 @@ export class ChecklistItemService {
     }
 
     let checklistData = data[0];
-    checklistData.isCompleted = checklistData.is_completed;
+    checklistData.isCompleted = !isCompleted;
 
     return checklistData;
   }

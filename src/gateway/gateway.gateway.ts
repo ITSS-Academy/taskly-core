@@ -78,11 +78,17 @@ export class GatewayGateway
     },
   ) {
     const { boardId } = payload;
+    console.log('leave', boardId);
     client.leave(boardId);
     this.boards[boardId].members = this.boards[boardId].members.filter(
       (member) => member.id !== client.id,
     );
     console.log('Client left board', client.id, boardId);
+
+    if (this.boards[boardId].members.length === 0) {
+      delete this.boards[boardId];
+      console.log(`Board ${boardId} has been removed.`);
+    }
   }
 
   @SubscribeMessage('listsChange')
@@ -95,7 +101,7 @@ export class GatewayGateway
     },
   ) {
     const { boardId, lists } = payload;
-    console.log('Lists change', boardId, lists);
+    // console.log('Lists change', boardId, lists);
     this.boards[boardId].lists = lists;
     this.server.to(boardId).emit('listsChange', lists);
   }
@@ -105,6 +111,15 @@ export class GatewayGateway
   }
 
   handleDisconnect(client: Socket): any {
+    for (const boardId in this.boards) {
+      this.boards[boardId].members = this.boards[boardId].members.filter(
+        (member) => member.id !== client.id,
+      );
+      if (this.boards[boardId].members.length === 0) {
+        delete this.boards[boardId];
+        console.log(`Board ${boardId} has been removed.`);
+      }
+    }
     console.log('Client disconnected', client.id);
   }
 }
