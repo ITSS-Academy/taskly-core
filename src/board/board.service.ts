@@ -244,7 +244,7 @@ export class BoardService {
       throw new BadRequestException(errorBoards[0].error.message);
     }
 
-    console.log(boards);
+    // console.log(boards);
     return boards;
   }
 
@@ -278,13 +278,13 @@ export class BoardService {
     //get members
     const { data: members, error: memberError } = await this.supabase.supabase
       .from('board_members')
-      .select('userId')
-      .eq('boardId', id);
+      .select('user_id')
+      .eq('board_id', id);
 
     if (memberError) {
       data.members = [];
     } else {
-      data.members = members;
+      data.members = members.map((member) => member.user_id);
     }
 
     // console.log(data.backgroundId);

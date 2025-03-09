@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { ChecklistItem } from '../checklist-item/entities/checklist-item.entity';
 import { SupabaseService } from '../supabase/supabase.service';
 import { UpdateCardDto } from './dto/update-card.dto';
+import { NotificationType } from '../enums/notification-type.enum';
 
 @Injectable()
 export class CardService {
@@ -117,20 +118,20 @@ export class CardService {
     return Promise.all(promises);
   }
 
-  async addNewMember(cardId: string, userId: string) {
+  async addNewMember(cardId: string, userId: string, senderId: string) {
     const { data: exitingMemberData, error: exitingMemberDataError } =
       await this.supabase.supabase
         .from('user_cards')
         .select()
-        .eq('cardId', cardId)
-        .eq('userId', userId);
+        .eq('card_id', cardId)
+        .eq('user_id', userId);
     if (exitingMemberData.length > 0) {
       throw new BadRequestException('User already a member');
     }
 
     const newMember = {
-      cardId,
-      userId,
+      card_id: cardId,
+      user_id: userId,
     };
 
     const { data, error } = await this.supabase.supabase
@@ -141,18 +142,64 @@ export class CardService {
       throw new BadRequestException(error.message);
     }
 
-    return data;
+    //get new member
+    const { data: memberData, error: memberError } =
+      await this.supabase.supabase
+        .from('user')
+        .select()
+        .eq('id', userId)
+        .single();
+
+    if (memberError) {
+      throw new BadRequestException(memberError.message);
+    }
+
+    //create notification
+    const newNotification = {
+      senderId: senderId,
+      userId: userId,
+      cardId: cardId,
+      read: false,
+      type: NotificationType.ADDED_TO_CARD,
+    };
+
+    const { error: notificationError } = await this.supabase.supabase
+      .from('notification')
+      .insert(newNotification);
+
+    if (notificationError) {
+      throw new BadRequestException(notificationError.message);
+    }
+
+    return memberData;
   }
 
-  async removeMember(cardId: string, userId: string) {
+  async removeMember(cardId: string, userId: string, senderId: string) {
     const { data, error } = await this.supabase.supabase
       .from('user_cards')
       .delete()
-      .eq('cardId', cardId)
-      .eq('userId', userId);
+      .eq('card_id', cardId)
+      .eq('user_id', userId);
     if (error) {
       throw new BadRequestException(error.message);
     }
+
+    const newNotification = {
+      senderId: senderId,
+      userId: userId,
+      cardId: cardId,
+      read: false,
+      type: NotificationType.REMOVED_FROM_CARD,
+    };
+
+    const { error: notificationError } = await this.supabase.supabase
+      .from('notification')
+      .insert(newNotification);
+
+    if (notificationError) {
+      throw new BadRequestException(notificationError.message);
+    }
+
     return data;
   }
 

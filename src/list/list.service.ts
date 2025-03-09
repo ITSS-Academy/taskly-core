@@ -280,10 +280,13 @@ export class ListService {
         await Promise.all([
           this.getAssignedUsers(card.id),
           this.getLaBelCards(card.id),
+          this.getCommentsCount(card.id),
+          this.getChecklistItems(card.id),
         ]).then((results) => {
           card.members = results[0];
           card.labels = results[1];
-          console.log(card);
+          card.commentsCount = results[2];
+          card.checklistItems = results[3];
         });
       }
 
@@ -293,7 +296,6 @@ export class ListService {
       ) {
         throw new BadRequestException('Error updating lists');
       }
-      console.log('cuoi', dataArray);
       return dataArray;
     } else {
       // get all cards in the list
@@ -342,9 +344,13 @@ export class ListService {
           await Promise.all([
             this.getAssignedUsers(card.id),
             this.getLaBelCards(card.id),
+            this.getCommentsCount(card.id),
+            this.getChecklistItems(card.id),
           ]).then((results) => {
             card.members = results[0];
             card.labels = results[1];
+            card.commentsCount = results[2];
+            card.checklistItems = results[3];
           });
         }),
       );

@@ -30,8 +30,15 @@ export class CardController {
   }
 
   @Post('/add-new-member')
-  addNewMember(@Body() req: { cardId: string; userId: string }) {
-    return this.cardService.addNewMember(req.cardId, req.userId);
+  addNewMember(
+    @Body() body: { cardId: string; userId: string },
+    @Req() req: any,
+  ) {
+    return this.cardService.addNewMember(
+      body.cardId,
+      body.userId,
+      req.user.uid,
+    );
   }
 
   @Put('/position')
@@ -49,9 +56,16 @@ export class CardController {
     return this.cardService.remove(id);
   }
 
-  @Delete('/remove-member')
-  removeMember(@Body() req: { cardId: string; userId: string }) {
-    return this.cardService.removeMember(req.cardId, req.userId);
+  @Put('/remove-member')
+  removeMember(
+    @Body() body: { cardId: string; userId: string },
+    @Req() req: any,
+  ) {
+    return this.cardService.removeMember(
+      body.cardId,
+      body.userId,
+      req.user.uid,
+    );
   }
 
   @Get('get-all-by-uid/:offset/:limit')

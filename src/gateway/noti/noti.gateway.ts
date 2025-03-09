@@ -52,12 +52,25 @@ export class NotiGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('Clients', this.clients);
   }
 
+  @SubscribeMessage('addToCard')
+  handleAddToCard(client: Socket, payload: { cardId: string; userId: string }) {
+    console.log('Adding to card', payload);
+    const target = this.clients.find((client) => client[payload.userId]);
+    console.log('Target', target);
+    if (target) {
+      console.log('Adding to card', target[payload.userId]);
+      this.server.to(target[payload.userId]).emit('newNoti');
+    }
+  }
+
   handleConnection(client: Socket, ...args: any[]) {
     console.log('Client connected', client.id);
   }
 
   handleDisconnect(client: Socket): any {
-    this.clients = this.clients.filter((client) => client.id !== client.id);
+    this.clients = this.clients.filter(
+      (c) => !Object.values(c).includes(client.id),
+    );
     console.log('Clients', this.clients);
     console.log('Client disconnected', client.id);
   }

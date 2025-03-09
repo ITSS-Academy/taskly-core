@@ -72,10 +72,6 @@ export class BoardController {
 
   @Get('get-all-by-uid')
   findAll(@Req() req: any) {
-    console.log(req.user.uid);
-    console.log(
-      'get all by uidget all by uidget all by uidget all by uidget all by uidget all by uidget all by uidget all by uidget all by uidget all by uidget all by uid',
-    );
     return this.boardService.findAll(req.user.uid);
   }
 
