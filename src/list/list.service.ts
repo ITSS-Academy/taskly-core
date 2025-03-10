@@ -393,7 +393,8 @@ export class ListService {
     if (error) {
       throw new BadRequestException(error.message);
     }
-    return data;
+
+    return data.length;
   }
 
   async getChecklistItems(cardId: string) {

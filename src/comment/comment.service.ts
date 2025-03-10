@@ -25,7 +25,7 @@ export class CommentService {
     if (error) {
       throw new BadRequestException(error.message);
     }
-    return data;
+    return data[0];
   }
 
   async findAll(id: string) {
@@ -60,6 +60,6 @@ export class CommentService {
     if (error) {
       throw new BadRequestException(error.message);
     }
-    return data;
+    return data[0];
   }
 }
