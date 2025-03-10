@@ -69,6 +69,23 @@ export class GatewayGateway
     console.log('Client joined board', client.id, board.id);
   }
 
+  @SubscribeMessage('backgroundChange')
+  handleBackgroundChange(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: {
+      boardId: string;
+      background: {
+        id: string;
+        fileLocation: string;
+      };
+    },
+  ) {
+    const { boardId, background } = payload;
+    console.log('Background change', boardId, background);
+    this.server.to(boardId).emit('backgroundChange', { boardId, background });
+  }
+
   @SubscribeMessage('leaveBoard')
   handleLeaveBoard(
     @ConnectedSocket() client: Socket,

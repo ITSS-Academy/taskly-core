@@ -54,5 +54,67 @@ export class BackgroundService {
     return data[0].fileLocation;
   }
 
-  async changBackground(file: Express.Multer.File, backgroundId) {}
+  async changBackground(
+    file: Express.Multer.File,
+    background: { backgroundId?: string; boardId: string },
+  ) {
+    const fileName = new Date();
+
+    if (background.backgroundId) {
+      const { error } = await this.supabase.supabase
+        .from('board')
+        .update({ backgroundId: background.backgroundId })
+        .eq('id', background.boardId);
+      if (error) {
+        throw new BadRequestException(error.message);
+      }
+      return {
+        backgroundId: background.backgroundId,
+      };
+    } else if (file) {
+      //upload to storage
+      const { data: backgroundData, error: backgroundError } =
+        await this.supabase.supabase.storage
+          .from('background')
+          .upload(`background/${fileName.getTime()}`, file.buffer, {
+            upsert: true,
+            contentType: file.mimetype,
+          });
+      if (backgroundError) {
+        throw new BadRequestException(backgroundError.message);
+      }
+      //get public url
+      const { data: publicURL } = this.supabase.supabase.storage
+        .from('background')
+        .getPublicUrl(`background/${fileName.getTime()}`);
+
+      const { data, error } = await this.supabase.supabase
+        .from('background')
+        .insert({
+          fileName: file.originalname,
+          fileLocation: publicURL.publicUrl,
+          isPredefined: false,
+          createdAt: fileName,
+        })
+        .select();
+      if (error) {
+        throw new BadRequestException(error.message);
+      }
+      const { error: updateError } = await this.supabase.supabase
+        .from('board')
+        .update({ backgroundId: data[0].id })
+        .eq('id', background.boardId);
+      if (updateError) {
+        throw new BadRequestException(updateError.message);
+      }
+      return {
+        backgroundId: data[0].id,
+        background: {
+          fileLocation: data[0].fileLocation,
+        },
+      };
+    } else {
+      throw new BadRequestException('Background is required');
+    }
+  }
 }
