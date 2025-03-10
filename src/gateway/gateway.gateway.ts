@@ -119,6 +119,9 @@ export class GatewayGateway
   ) {
     const { boardId, lists } = payload;
     // console.log('Lists change', boardId, lists);
+    // if (!this.boards[boardId] || this.boards[boardId].lists === undefined) {
+    //   return;
+    // }
     this.boards[boardId].lists = lists;
     this.server.to(boardId).emit('listsChange', lists);
   }

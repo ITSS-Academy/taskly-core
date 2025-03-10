@@ -224,6 +224,7 @@ export class NotificationsService {
     const { data: existUser, error: existError } = await this.supabase.supabase
       .from('notification')
       .select('userId')
+      .eq('boardId', createNotificationDto.boardId)
       .in(
         'userId',
         createNotificationDto.users.map((user) => user.id),
@@ -245,6 +246,34 @@ export class NotificationsService {
 
       throw new BadRequestException(
         `${usersName.join(', ')} is already invited`,
+      );
+    }
+
+    //check user in board_members
+    const { data: boardMembers, error: boardMembersError } =
+      await this.supabase.supabase
+        .from('board_members')
+        .select('user_id')
+        .eq('board_id', createNotificationDto.boardId)
+        .in(
+          'user_id',
+          createNotificationDto.users.map((user) => user.id),
+        );
+
+    if (boardMembers.length > 0) {
+      //getName of user
+      const { data: users, error: usersError } = await this.supabase.supabase
+        .from('user')
+        .select('name')
+        .in(
+          'id',
+          boardMembers.map((user) => user.user_id),
+        );
+
+      const usersName = users.map((user) => user.name);
+
+      throw new BadRequestException(
+        `${usersName.join(', ')} is already a member of this board`,
       );
     }
 
