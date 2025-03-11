@@ -81,4 +81,23 @@ export class CardController {
   findOne(@Param('id') id: string) {
     return this.cardService.findOne(id);
   }
+
+  @Post('filter')
+  fillter(
+    @Body()
+    req: {
+      query: {
+        labelIds: string[];
+        memberIds: string[];
+      };
+      boardId: string;
+    },
+  ) {
+    console.log(req);
+    return this.cardService.filterCards(
+      req.query.labelIds,
+      req.query.memberIds,
+      req.boardId,
+    );
+  }
 }

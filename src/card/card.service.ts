@@ -321,4 +321,100 @@ export class CardService {
       attachments,
     };
   }
+
+  async filterCards(labelIds: string[], memberIds: string[], boardId: string) {
+    const { data: listData, error: listError } = await this.supabase.supabase
+      .from('list')
+      .select('id')
+      .eq('boardId', boardId);
+
+    if (listError) {
+      return [];
+    }
+
+    const listIds = listData.map((list) => list.id);
+    if (listIds.length === 0) return [];
+
+    let cardIdsFromLabels = new Set<string>();
+    let cardIdsFromMembers = new Set<string>();
+
+    if (labelIds.length > 0) {
+      const { data: labelCards, error: labelError } =
+        await this.supabase.supabase
+          .from('labels_cards')
+          .select('cardId, boardLabelId')
+          .in('boardLabelId', labelIds);
+
+      if (labelError) {
+        return [];
+      }
+
+      const labelCardCount = new Map<string, number>();
+      labelCards.forEach((card) => {
+        labelCardCount.set(
+          card.cardId,
+          (labelCardCount.get(card.cardId) || 0) + 1,
+        );
+      });
+
+      // Chỉ lấy những card có **tất cả** labelIds
+      cardIdsFromLabels = new Set(
+        [...labelCardCount.entries()]
+          .filter(([_, count]) => count === labelIds.length)
+          .map(([cardId]) => cardId),
+      );
+    }
+
+    if (memberIds.length > 0) {
+      const { data: memberCards, error: memberError } =
+        await this.supabase.supabase
+          .from('user_cards')
+          .select('card_id, user_id')
+          .in('user_id', memberIds);
+
+      if (memberError) {
+        return [];
+      }
+
+      const memberCardCount = new Map<string, number>();
+      memberCards.forEach((card) => {
+        memberCardCount.set(
+          card.card_id,
+          (memberCardCount.get(card.card_id) || 0) + 1,
+        );
+      });
+
+      cardIdsFromMembers = new Set(
+        [...memberCardCount.entries()]
+          .filter(([_, count]) => count === memberIds.length)
+          .map(([cardId]) => cardId),
+      );
+    }
+
+    let finalCardIds: string[] = [];
+    if (labelIds.length > 0 && memberIds.length > 0) {
+      finalCardIds = [...cardIdsFromLabels].filter((id) =>
+        cardIdsFromMembers.has(id),
+      );
+    } else if (labelIds.length > 0) {
+      finalCardIds = [...cardIdsFromLabels];
+    } else if (memberIds.length > 0) {
+      finalCardIds = [...cardIdsFromMembers];
+    }
+
+    if (finalCardIds.length === 0) return [];
+
+    // Truy vấn card dựa trên listId và finalCardIds
+    const { data, error } = await this.supabase.supabase
+      .from('card')
+      .select('id')
+      .in('id', finalCardIds)
+      .in('listId', listIds);
+
+    if (error) {
+      return [];
+    }
+
+    return data;
+  }
 }
