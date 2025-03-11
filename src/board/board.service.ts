@@ -148,6 +148,8 @@ export class BoardService {
       throw new BadRequestException(error.message);
     }
 
+    console.log(data);
+
     return data;
   }
 

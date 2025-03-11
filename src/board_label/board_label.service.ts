@@ -134,4 +134,28 @@ export class BoardLabelService {
 
     return { cardId, labelData };
   }
+
+  async deleteLabelFromCard(cardId: string, boardLabelIds: string[]) {
+    const deletePromises = boardLabelIds.map(async (labelId) => {
+      const { data, error } = await this.supabase.supabase
+        .from('labels_cards')
+        .delete()
+        .eq('cardId', cardId)
+        .eq('boardLabelId', labelId)
+        .select();
+      if (error) throw new BadRequestException(error.message);
+      return true;
+    });
+
+    const deleteResults = await Promise.all(deletePromises);
+    for (let deleteResult of deleteResults) {
+      if (!deleteResult) {
+        throw new BadRequestException('Error in deleting label from card');
+      }
+    }
+
+    //return ids of deleted labels
+
+    return { cardId, labelData: boardLabelIds };
+  }
 }

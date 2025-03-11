@@ -6,14 +6,16 @@ export class BackgroundService {
   constructor(private supabase: SupabaseService) {}
 
   async findAllPredefined() {
-    // const { data: images, error } = await this.supabase.supabase
-    //   .from('background')
-    //   .select('id, fileName,fileLocation, isPredefined')
-    //   .eq('isPredefined', true)
-    //   .eq('color',null)
-    // if (error) {
-    //   return new BadRequestException(error.message);
-    // }
+    const { data: images, error } = await this.supabase.supabase
+      .from('background')
+      .select('id, fileName,fileLocation')
+      .eq('isPredefined', true);
+    if (error) {
+      return new BadRequestException(error.message);
+    }
+
+    return images;
+
     //
     // const {data: colors, error: colorError} = await this.supabase.supabase
     //   .from('background')
@@ -24,22 +26,16 @@ export class BackgroundService {
     // if (colorError) {
     //   return new BadRequestException(colorError.message);
     // }
-
-    Promise.all([
-      this.supabase.supabase
-        .from('background')
-        .select('id, fileName, fileLocation')
-        .eq('color', null),
-      this.supabase.supabase
-        .from('background')
-        .select('id, color')
-        .eq('fileLocation', null),
-    ]).then((values) => {
-      return {
-        images: values[0].data,
-        colors: values[1].data,
-      };
-    });
+    //
+    // Promise.all([
+    //   this.supabase.supabase
+    //     .from('background')
+    //     .select('id, fileName, fileLocation')
+    //     .eq('color', null),
+    //
+    // ]).then((values) => {
+    //   return values[0].data
+    // });
   }
 
   async findOne(id: string) {
@@ -61,15 +57,25 @@ export class BackgroundService {
     const fileName = new Date();
 
     if (background.backgroundId) {
-      const { error } = await this.supabase.supabase
+      const { data, error } = await this.supabase.supabase
         .from('board')
         .update({ backgroundId: background.backgroundId })
         .eq('id', background.boardId);
       if (error) {
         throw new BadRequestException(error.message);
       }
+
+      const { data: backgroundData, error: backgroundError } =
+        await this.supabase.supabase
+          .from('background')
+          .select('fileLocation')
+          .eq('id', background.backgroundId);
+
       return {
         backgroundId: background.backgroundId,
+        background: {
+          fileLocation: backgroundData[0].fileLocation,
+        },
       };
     } else if (file) {
       //upload to storage

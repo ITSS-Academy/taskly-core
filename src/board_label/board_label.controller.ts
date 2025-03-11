@@ -27,6 +27,12 @@ export class BoardLabelController {
     return this.boardLabelService.addLabelToCard(req.cardId, req.labelIds);
   }
 
+  @Put('delete-label-from-card')
+  deleteLabelFromCard(@Body() req: { cardId: string; labelIds: string[] }) {
+    console.log(req);
+    return this.boardLabelService.deleteLabelFromCard(req.cardId, req.labelIds);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.boardLabelService.findOne(id);
