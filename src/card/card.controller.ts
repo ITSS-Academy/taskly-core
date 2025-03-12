@@ -100,4 +100,10 @@ export class CardController {
       req.boardId,
     );
   }
+
+  @Post('get-card-by-user')
+  getCardByUser(@Req() req: any) {
+    console.log('get card by user');
+    return this.cardService.getCardByUser(req.user.uid);
+  }
 }

@@ -417,4 +417,166 @@ export class CardService {
 
     return data;
   }
+
+  async getCardByUser(uid: string) {
+    const { data: cardIds, error } = await this.supabase.supabase
+      .from('user_cards')
+      .select('card_id')
+      .eq('user_id', uid);
+
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    //get cardData
+    const cardPromises = cardIds.map((card) => {
+      return this.supabase.supabase
+        .from('card')
+        .select()
+        .eq('id', card.card_id)
+        .single();
+    });
+
+    const cardData = await Promise.all(cardPromises);
+
+    //get labelcards data, list data by promise.all
+    const promises = cardData.map(async (card) => {
+      const labelCards = await this.getLaBelCards(card.data.id);
+      const checklistItems = await this.getChecklistItems(card.data.id);
+      const assignedUsers = await this.getAssignedUsers(card.data.id);
+      const listData = await this.getListIdById(card.data.listId);
+
+      return {
+        ...card.data,
+        labels: labelCards,
+        checklistItems: checklistItems,
+        members: assignedUsers,
+        list: listData,
+      };
+    });
+
+    let finalData = await Promise.all(promises);
+
+    const getBoardPromises = finalData.map(async (card) => {
+      const boardData = await this.getBoardById(card.list.boardId);
+      return {
+        ...card,
+        board: boardData,
+      };
+    });
+
+    finalData = await Promise.all(getBoardPromises);
+
+    console.log('finalData', finalData);
+
+    return finalData;
+  }
+
+  async getBoardById(boardId: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('board')
+      .select()
+      .eq('id', boardId)
+      .single();
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    return data;
+  }
+
+  async getListIdById(listId: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('list')
+      .select('*')
+      .eq('id', listId)
+      .single();
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    return data;
+  }
+
+  async getLaBelCards(cardId: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('labels_cards')
+      .select('boardLabelId')
+      .eq('cardId', cardId);
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    //get label data
+    const promises = data.map(async (label) => {
+      const { data: labelData, error } = await this.supabase.supabase
+        .from('board_label')
+        .select()
+        .eq('id', label.boardLabelId)
+        .single();
+      if (error) {
+        throw new BadRequestException(error.message);
+      }
+      return labelData;
+    });
+
+    const labelData = await Promise.all(promises);
+
+    return labelData;
+  }
+
+  async getCommentsCount(cardId: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('comment')
+      .select('id', { count: 'exact' })
+      .eq('cardId', cardId);
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    return data.length;
+  }
+
+  async getChecklistItems(cardId: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('checklist_item')
+      .select('id, title, is_completed')
+      .eq('cardId', cardId)
+      .order('is_completed', { ascending: true });
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    return data.map((item) => {
+      return {
+        id: item.id,
+        title: item.title,
+        isCompleted: item.is_completed,
+      };
+    });
+  }
+
+  async getAssignedUsers(cardId: string) {
+    const { data, error } = await this.supabase.supabase
+      .from('user_cards')
+      .select('user_id')
+      .eq('card_id', cardId);
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    //get user data
+    const promises = data.map(async (user) => {
+      const { data: userData, error } = await this.supabase.supabase
+        .from('user')
+        .select()
+        .eq('id', user.user_id)
+        .single();
+      if (error) {
+        throw new BadRequestException(error.message);
+      }
+      return userData;
+    });
+
+    const userData = await Promise.all(promises);
+
+    return userData;
+  }
 }
