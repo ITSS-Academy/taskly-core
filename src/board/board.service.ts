@@ -113,11 +113,14 @@ export class BoardService {
     }
 
     if (!background.isPredefined) {
+
+      const createdAtDate = new Date(background.createdAt);
+
       //delete from storage
       const { data: deleteStorage, error: deleteStorageError } =
         await this.supabase.supabase.storage
           .from('background')
-          .remove([`background/${background.createdAt.getTime()}`]);
+          .remove([`background/${createdAtDate.getTime()}`]);
 
       if (deleteStorageError) {
         throw new BadRequestException(deleteStorageError.message);
@@ -331,7 +334,7 @@ export class BoardService {
     return data;
   }
 
-  async search(search: string) {
+  async search(search: string,uid:string) {
     // let { data, error } = await this.supabase.supabase
     //     .rpc('search_boards', {
     //       search_term: search,
@@ -341,10 +344,24 @@ export class BoardService {
     //   throw new BadRequestException(error.message);
     // }
 
-    const { data, error } = await this.supabase.supabase
+    const { data: ownedBoards, error: ownedError } = await this.supabase.supabase
       .from('board')
-      .select()
+      .select(`*`)
+      .eq('ownerId', uid)
       .ilike('name', `%${search}%`);
+
+    const { data: memberBoards, error: memberError } = await this.supabase.supabase
+      .from('board')
+      .select(`*,board_members!inner(*)`)
+      .eq('board_members.user_id', uid)
+      .ilike('name', `%${search}%`);
+
+    const data = [...(ownedBoards || []), ...(memberBoards || [])];
+
+    if (ownedError || memberError) {
+      console.error(ownedError || memberError);
+    }
+
 
     return data;
   }

@@ -93,9 +93,9 @@ export class BoardController {
 
   //
   @Post('search')
-  search(@Body() search: { search: string }) {
+  search(@Body() search: { search: string },@Req() req: any) {
     console.log(search);
-    return this.boardService.search(search.search);
+    return this.boardService.search(search.search, req.user.uid);
   }
 
   //update name

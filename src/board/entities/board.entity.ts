@@ -57,6 +57,6 @@ export class Board {
   })
   notifications: Notification[];
 
-  @ManyToOne(() => Background)
+  @ManyToOne(() => Background,{cascade: true, onDelete: 'CASCADE'})
   background: Background;
 }
