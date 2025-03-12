@@ -45,7 +45,10 @@ export class Board {
   })
   labels: BoardLabel[];
 
-  @ManyToMany(() => User, (user) => user.joinedBoards)
+  @ManyToMany(() => User, (user) => user.joinedBoards, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
   members: User[];
 
   @OneToMany(() => Notification, (notification) => notification.board, {

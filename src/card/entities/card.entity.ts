@@ -22,7 +22,10 @@ export class Card {
   @Column('text')
   title: string;
 
-  @ManyToMany(() => User, (user) => user.cards)
+  @ManyToMany(() => User, (user) => user.cards, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
   members: User[];
 
   @Column('text')

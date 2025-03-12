@@ -33,7 +33,9 @@ export class User {
   @OneToMany(() => Board, (board) => board.owner)
   ownedBoards: Board[];
 
-  @ManyToMany(() => Board, (board) => board.members)
+  @ManyToMany(() => Board, (board) => board.members, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable({
     name: 'board_members', // table name for the junction table of this relation
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
@@ -44,7 +46,9 @@ export class User {
   @Column('timestamptz', { default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @ManyToMany(() => Card, (card) => card.members)
+  @ManyToMany(() => Card, (card) => card.members, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable({
     name: 'user_cards',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
