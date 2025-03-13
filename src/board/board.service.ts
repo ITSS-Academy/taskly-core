@@ -459,7 +459,7 @@ export class BoardService {
     }
 
     if (board.ownerId !== uid) {
-      throw new BadRequestException('You can not remove the owner');
+      throw new BadRequestException('You are not owner of this board');
     }
 
     const { data: deleteMember, error: deleteMemberError } =
