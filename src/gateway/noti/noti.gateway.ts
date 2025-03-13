@@ -9,7 +9,6 @@ import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway(81, {
   cors: true,
-  transports: ['websocket'],
 })
 export class NotiGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -60,6 +59,49 @@ export class NotiGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (target) {
       console.log('Adding to card', target[payload.userId]);
       this.server.to(target[payload.userId]).emit('newNoti');
+    }
+  }
+
+  @SubscribeMessage('deleteBoard')
+  handleDeleteBoard(
+    client: Socket,
+    payload: { boardId: string; userIds: string[] },
+  ) {
+    if (!payload || !payload.userIds) {
+      return;
+    }
+
+    console.log('Deleting board:', payload.boardId);
+    console.log('UserIds', payload.userIds);
+    for (const userId of this.clients) {
+      console.log('User', userId);
+    }
+
+    payload.userIds.forEach((userId) => {
+      const targetSocket = this.clients.find((c) => c[userId]);
+      if (targetSocket) {
+        this.server.to(targetSocket[userId]).emit('boardDeleted', {
+          boardId: payload.boardId,
+          message: 'You have not been removed from the board',
+        });
+      }
+    });
+  }
+
+  @SubscribeMessage('acceptInvite')
+  handleAcceptInvite(
+    client: Socket,
+    payload: { boardId: string; userId: string; receiverId: string },
+  ) {
+    console.log('Accepting invite', payload);
+    const target = this.clients.find((client) => client[payload.receiverId]);
+    console.log('Target', target);
+    if (target) {
+      console.log('Accepting invite', target[payload.receiverId]);
+      this.server.to(target[payload.receiverId]).emit('acceptedInvite', {
+        boardId: payload.boardId,
+        userId: payload.userId,
+      });
     }
   }
 

@@ -32,7 +32,8 @@ export class CommentService {
     const { data, error } = await this.supabase.supabase
       .from('comment')
       .select()
-      .eq('cardId', id);
+      .eq('cardId', id)
+      .order('createdAt', { ascending: false });
     if (error) {
       throw new BadRequestException(error.message);
     }

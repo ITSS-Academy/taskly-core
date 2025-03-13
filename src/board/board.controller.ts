@@ -70,6 +70,22 @@ export class BoardController {
     return this.boardService.updateBackground(req.boardId, newBackground);
   }
 
+  @Put('remove-member')
+  removeMember(
+    @Body()
+    body: {
+      boardId: string;
+      userId: string;
+    },
+    @Req() req: any,
+  ) {
+    return this.boardService.removeMember(
+      body.boardId,
+      body.userId,
+      req.user.uid,
+    );
+  }
+
   @Get('get-all-by-uid')
   findAll(@Req() req: any) {
     return this.boardService.findAll(req.user.uid);
@@ -93,7 +109,7 @@ export class BoardController {
 
   //
   @Post('search')
-  search(@Body() search: { search: string },@Req() req: any) {
+  search(@Body() search: { search: string }, @Req() req: any) {
     console.log(search);
     return this.boardService.search(search.search, req.user.uid);
   }
@@ -108,7 +124,7 @@ export class BoardController {
 
   //delete board
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.boardService.remove(id);
+  remove(@Param('id') id: string, @Req() req: any) {
+    return this.boardService.remove(id, req.user.uid);
   }
 }

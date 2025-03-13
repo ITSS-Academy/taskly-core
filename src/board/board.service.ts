@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationType } from '../enums/notification-type.enum';
 
 @Injectable()
 export class BoardService {
@@ -83,17 +84,38 @@ export class BoardService {
       return lists;
     });
 
-    const listsCount = await Promise.all(listsCountPromise);
+    //get members in boards by promise
+    const membersPromise = data.map(async (board: any) => {
+      const { data: members, error: memberError } = await this.supabase.supabase
+        .from('board_members')
+        .select('user_id')
+        .eq('board_id', board.id);
+      if (memberError) {
+        throw new BadRequestException(memberError.message);
+      }
+      return members;
+    });
+
+    //promise all lists count and members 1
+    const [listsCount, members] = await Promise.all([
+      Promise.all(listsCountPromise),
+      Promise.all(membersPromise),
+    ]);
 
     //add count of lists to board
     data.forEach((board, index) => {
       board.listsCount = listsCount[index][0];
     });
 
+    //add members to board
+    data.forEach((board, index) => {
+      board.members = members[index].map((member) => member.user_id);
+    });
+
     return data;
   }
 
-  async remove(id: string) {
+  async remove(id: string, uid: string) {
     //get BackgroundId from Board
     const { data: board, error: boardError } = await this.supabase.supabase
       .from('board')
@@ -135,7 +157,35 @@ export class BoardService {
       }
     }
 
-    return this.supabase.supabase.from('board').delete().eq('id', id);
+    //create notification to members in board
+    const { data: members, error: memberError } = await this.supabase.supabase
+      .from('board_members')
+      .select('user_id')
+      .eq('board_id', id);
+
+    if (memberError) {
+      throw new BadRequestException(memberError.message);
+    }
+
+    const newNotification = members.map((member) => {
+      return {
+        userId: member.user_id,
+        boardId: id,
+        type: NotificationType.REMOVED_FROM_BOARD,
+        read: false,
+        createdAt: new Date(),
+        senderId: uid,
+      };
+    });
+
+    const { data: deleteBoard, error: deleteBoardError } =
+      await this.supabase.supabase.from('board').delete().eq('id', id);
+
+    if (deleteBoardError) {
+      throw new BadRequestException(deleteBoardError.message);
+    }
+
+    return deleteBoard;
   }
 
   async update(id: string, updateBoardDto: UpdateBoardDto) {
@@ -206,6 +256,20 @@ export class BoardService {
         })
         .select();
 
+      if (boardError) {
+        throw new BadRequestException(boardError.message);
+      }
+
+      //get members in boards[0]
+      const { data: members, error: memberError } = await this.supabase.supabase
+        .from('board_members')
+        .select('user_id')
+        .eq('board_id', board[0].id);
+      if (memberError) {
+        throw new BadRequestException(memberError.message);
+      }
+      board[0].members = members.map((member) => member.user_id);
+
       return board[0];
     } else {
       const { data: board, error: boardError } = await this.supabase.supabase
@@ -217,6 +281,22 @@ export class BoardService {
           backgroundId: createBoardDto.backgroundId,
         })
         .select();
+
+      if (boardError) {
+        throw new BadRequestException(boardError.message);
+      }
+
+      //get members in boards[0]
+      const { data: members, error: memberError } = await this.supabase.supabase
+        .from('board_members')
+        .select('user_id')
+        .eq('board_id', board[0].id);
+
+      if (memberError) {
+        throw new BadRequestException(memberError.message);
+      }
+      board[0].members = members.map((member) => member.user_id);
+
       return board[0];
     }
   }
@@ -365,5 +445,49 @@ export class BoardService {
     }
 
     return data;
+  }
+
+  async removeMember(boardId: string, userId: string, uid: string) {
+    const { data: board, error: boardError } = await this.supabase.supabase
+      .from('board')
+      .select('ownerId')
+      .eq('id', boardId)
+      .single();
+
+    if (boardError) {
+      throw new BadRequestException(boardError.message);
+    }
+
+    if (board.ownerId !== uid) {
+      throw new BadRequestException('You can not remove the owner');
+    }
+
+    const { data: deleteMember, error: deleteMemberError } =
+      await this.supabase.supabase
+        .from('board_members')
+        .delete()
+        .eq('board_id', boardId)
+        .eq('user_id', userId);
+
+    if (deleteMemberError) {
+      throw new BadRequestException(deleteMemberError.message);
+    }
+
+    //create notification
+    const { data: notification, error: notificationError } =
+      await this.supabase.supabase.from('notification').insert({
+        userId: userId,
+        boardId: boardId,
+        type: NotificationType.REMOVED_FROM_BOARD,
+        read: false,
+        createdAt: new Date(),
+        senderId: uid,
+      });
+
+    if (notificationError) {
+      throw new BadRequestException(notificationError.message);
+    }
+
+    return deleteMember;
   }
 }

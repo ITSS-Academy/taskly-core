@@ -13,7 +13,6 @@ import { ListModel } from './models/list.model';
 
 @WebSocketGateway(80, {
   cors: true,
-  transports: ['websocket'],
 })
 export class GatewayGateway
   implements OnGatewayConnection, OnGatewayDisconnect

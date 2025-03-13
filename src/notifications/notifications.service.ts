@@ -220,6 +220,21 @@ export class NotificationsService {
   }
 
   async create(createNotificationDto: CreateNotificationDto, senderId: string) {
+    //check is owner of board
+    const { data: board, error: boardError } = await this.supabase.supabase
+      .from('board')
+      .select('ownerId')
+      .eq('id', createNotificationDto.boardId)
+      .single();
+
+    if (boardError) {
+      throw new BadRequestException(boardError.message);
+    }
+
+    if (board.ownerId !== senderId) {
+      throw new BadRequestException('You are not owner of this board');
+    }
+
     //check users is invited or not for createNotificationDto.users
     const { data: existUser, error: existError } = await this.supabase.supabase
       .from('notification')
@@ -228,7 +243,8 @@ export class NotificationsService {
       .in(
         'userId',
         createNotificationDto.users.map((user) => user.id),
-      );
+      )
+      .eq('type', NotificationType.INVITE_BOARD);
     if (existError) {
       throw new BadRequestException(existError.message);
     }
