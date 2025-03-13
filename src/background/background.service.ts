@@ -47,6 +47,15 @@ export class BackgroundService {
       throw new BadRequestException(error.message);
     }
     console.log(data);
+
+    if (!data[0]) {
+      throw new BadRequestException('Background not found');
+    }
+
+    if (!data[0].fileLocation) {
+      throw new BadRequestException('Background not found');
+    }
+
     return data[0].fileLocation;
   }
 

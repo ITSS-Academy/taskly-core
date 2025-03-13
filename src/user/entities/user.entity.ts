@@ -12,6 +12,7 @@ import { Board } from '../../board/entities/board.entity';
 import { Comment } from '../../comment/entities/comment.entity';
 import { Card } from '../../card/entities/card.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
+import { UserCard } from '../../user_cards/user_cards.entity';
 
 @Entity()
 export class User {
@@ -46,15 +47,10 @@ export class User {
   @Column('timestamptz', { default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @ManyToMany(() => Card, (card) => card.members, {
+  @OneToMany(() => UserCard, (userCard) => userCard.card, {
     onDelete: 'CASCADE',
   })
-  @JoinTable({
-    name: 'user_cards',
-    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'card_id', referencedColumnName: 'id' },
-  })
-  cards: Card[];
+  cards: UserCard[];
 
   @OneToMany(() => Notification, (notification) => notification.user, {
     onDelete: 'CASCADE',

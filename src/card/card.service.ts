@@ -422,7 +422,8 @@ export class CardService {
     const { data: cardIds, error } = await this.supabase.supabase
       .from('user_cards')
       .select('card_id')
-      .eq('user_id', uid);
+      .eq('user_id', uid)
+      .order('createdAt', { ascending: false });
 
     if (error) {
       throw new BadRequestException(error.message);

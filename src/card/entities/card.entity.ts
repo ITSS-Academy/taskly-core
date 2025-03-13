@@ -13,6 +13,7 @@ import { User } from '../../user/entities/user.entity';
 import { BoardLabel } from '../../board_label/entities/board_label.entity';
 import { CardAttachment } from '../../card_attachment/entities/card_attachment.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
+import { UserCard } from '../../user_cards/user_cards.entity';
 
 @Entity()
 export class Card {
@@ -22,11 +23,10 @@ export class Card {
   @Column('text')
   title: string;
 
-  @ManyToMany(() => User, (user) => user.cards, {
+  @OneToMany(() => UserCard, (userCard) => userCard.card, {
     onDelete: 'CASCADE',
-    cascade: true,
   })
-  members: User[];
+  members: UserCard[];
 
   @Column('text')
   description: string;
