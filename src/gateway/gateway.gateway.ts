@@ -12,6 +12,7 @@ import { BoardModel } from './models/board.model';
 import { ListModel } from './models/list.model';
 
 @WebSocketGateway(80, {
+  namespace: '/board',
   cors: true,
 })
 export class GatewayGateway

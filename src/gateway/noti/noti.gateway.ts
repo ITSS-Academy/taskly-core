@@ -7,7 +7,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway(81, {
+@WebSocketGateway(80, {
+  namespace: '/noti',
   cors: true,
 })
 export class NotiGateway implements OnGatewayConnection, OnGatewayDisconnect {
